@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Pembelajaran Tim: Petualangan Matriks & Editor Soal</title>
+    <!-- Tailwind CSS for modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax untuk menampilkan LaTeX/equation -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        /* Scrollbar styling for editor */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+    
+        .cover-glow { box-shadow: 0 25px 80px rgba(99,102,241,.28), 0 8px 30px rgba(236,72,153,.16); }
+        .game-card { transition: transform .2s ease, box-shadow .2s ease; }
+        .game-card:hover { transform: translateY(-5px); box-shadow: 0 18px 35px rgba(0,0,0,.25); }
+        .soft-panel { background: rgba(255,255,255,.075); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(16px); }
+        .timer-pill { min-width: 110px; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-fuchsia-950 min-h-screen text-white flex flex-col items-center justify-between p-4 relative overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl text-center py-5">
+        <div class="soft-panel cover-glow rounded-3xl px-6 py-7 md:px-10 md:py-9 relative overflow-hidden">
+            <div class="absolute -top-20 -left-16 w-44 h-44 bg-fuchsia-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-10 w-56 h-56 bg-cyan-400/20 rounded-full blur-3xl"></div>
+            <div class="relative">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-cyan-200 mb-4">
+                    ✨ MEDIA PEMBELAJARAN INTERAKTIF • MATEMATIKA
+                </div>
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-violet-300 to-pink-300 mb-3">
+                    MATRIKS GAMES: TEAM BATTLE
+                </h1>
+                <p class="text-slate-300 text-sm md:text-base max-w-2xl mx-auto">Belajar matriks melalui tantangan memori, bingo, dan editor soal berbasis equation.</p>
+                <div class="flex flex-wrap justify-center gap-2 mt-5 text-xs">
+                    <span class="px-3 py-1.5 rounded-full bg-pink-500/15 text-pink-200 border border-pink-300/15">🧠 Memory Challenge</span>
+                    <span class="px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-200 border border-emerald-300/15">🎯 Matrix Bingo</span>
+                    <span class="px-3 py-1.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-300/15">✏️ Equation Editor</span>
+                </div>
+                <p class="text-slate-400 text-xs mt-5">SMA Quranic Science Boarding School • Febiriani, S.Pd.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main id="app" class="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/20 mb-6">
+        
+        <!-- Main Menu -->
+        <div id="main-menu" class="text-center py-4 md:py-7">
+            <div class="mb-7">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-white">Pilih Tantangan</h2>
+                <p class="text-slate-300 text-sm mt-2">Pilih permainan untuk memulai pembelajaran bersama tim.</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                <button onclick="startMemoryGame()" class="game-card bg-gradient-to-br from-pink-500 via-rose-500 to-fuchsia-600 text-white font-bold p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-[170px]">
+                    <span class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-4xl mb-3">🧠</span>
+                    <span class="text-lg">Game 1: Memori</span>
+                    <span class="text-xs text-pink-100 mt-1">Hafalkan & jawab</span>
+                </button>
+                <button onclick="startQuizGame()" class="game-card bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-white font-bold p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-[170px]">
+                    <span class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-4xl mb-3">🎯</span>
+                    <span class="text-lg">Game 2: Bingo</span>
+                    <span class="text-xs text-emerald-100 mt-1">Pilih nomor soal</span>
+                </button>
+                <button onclick="openEditor()" class="game-card bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-white font-bold p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-[170px]">
+                    <span class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-4xl mb-3">✏️</span>
+                    <span class="text-lg">Editor Soal</span>
+                    <span class="text-xs text-orange-100 mt-1">Equation & preview</span>
+                </button>
+                <button onclick="openSettings()" class="game-card bg-gradient-to-br from-violet-500 via-indigo-600 to-blue-600 text-white font-bold p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-[170px]">
+                    <span class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-4xl mb-3">⚙️</span>
+                    <span class="text-lg">Pengaturan</span>
+                    <span class="text-xs text-indigo-100 mt-1">Tim & waktu game</span>
+                </button>
+            </div>
+            <div class="mt-7 soft-panel rounded-2xl p-4 max-w-3xl mx-auto">
+                <div class="grid sm:grid-cols-3 gap-3 text-xs text-slate-300">
+                    <div><span class="text-pink-300 font-bold">MEMORI</span><br>6 soal per level</div>
+                    <div><span class="text-cyan-300 font-bold">BINGO</span><br>24 soal tantangan</div>
+                    <div><span class="text-amber-300 font-bold">EQUATION</span><br>LaTeX + Matrix</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS CONTAINER -->
+        <div id="settings-container" class="hidden">
+            <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-yellow-300">Pengaturan Tim</h2>
+                    <p class="text-sm text-indigo-200">Atur jumlah dan nama tim yang akan bermain.</p>
+                </div>
+                <button onclick="backToMenu()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Kembali ke Menu</button>
+            </div>
+            
+            <div class="bg-black/30 p-6 rounded-xl border border-white/20 max-w-md mx-auto">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-indigo-200 mb-2">Jumlah Tim (2 - 6):</label>
+                    <input type="number" id="num-teams-input" min="2" max="6" value="2" onchange="generateTeamInputs()" class="w-full px-4 py-2 rounded-lg text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div id="team-names-container" class="space-y-3 mb-6">
+                    <!-- Dynamic team inputs -->
+                </div>
+
+                <div class="mb-6 border-t border-white/20 pt-5 space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-indigo-200 mb-2">Durasi Menampilkan Matriks</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="memory-time-input" min="1" max="60" value="5" class="w-24 px-3 py-2 rounded-lg text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                            <span class="text-sm text-indigo-200">detik</span>
+                        </div>
+                        <p class="text-xs text-indigo-300 mt-1">Waktu untuk menghafalkan matriks sebelum soal muncul (maks. 60 detik).</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-pink-200 mb-2">Waktu Menjawab Game Memori</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="memory-answer-time-input" min="10" max="120" value="120" class="w-24 px-3 py-2 rounded-lg text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                            <span class="text-sm text-indigo-200">detik</span>
+                        </div>
+                        <p class="text-xs text-indigo-300 mt-1">Atur waktu menjawab setelah matriks ditutup. Maksimal 2 menit (120 detik).</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-purple-200 mb-2">Waktu Memori per Level</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div><label class="text-xs text-indigo-200">Level 1</label><input type="number" id="memory-l1-time-input" min="1" max="60" value="5" class="w-full px-3 py-2 rounded-lg text-gray-900 font-bold"></div>
+                            <div><label class="text-xs text-indigo-200">Level 2</label><input type="number" id="memory-l2-time-input" min="1" max="60" value="7" class="w-full px-3 py-2 rounded-lg text-gray-900 font-bold"></div>
+                            <div><label class="text-xs text-indigo-200">Level 3</label><input type="number" id="memory-l3-time-input" min="1" max="60" value="10" class="w-full px-3 py-2 rounded-lg text-gray-900 font-bold"></div>
+                        </div>
+                        <p class="text-xs text-indigo-300 mt-1">Waktu menghafal dapat dibuat berbeda untuk setiap level (maks. 60 detik).</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-violet-200 mb-2">Ukuran Font Soal Bingo</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="bingo-font-size-input" min="14" max="40" value="22" class="w-24 px-3 py-2 rounded-lg text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-violet-400">
+                            <span class="text-sm text-indigo-200">px</span>
+                        </div>
+                        <p class="text-xs text-indigo-300 mt-1">Atur ukuran tulisan soal yang muncul di popup. Maksimal 40 px.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-cyan-200 mb-2">Waktu Menjawab Game Bingo</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="bingo-answer-time-input" min="10" max="300" value="300" class="w-24 px-3 py-2 rounded-lg text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                            <span class="text-sm text-indigo-200">detik</span>
+                        </div>
+                        <p class="text-xs text-indigo-300 mt-1">Berlaku untuk setiap soal Bingo. Maksimal 5 menit (300 detik).</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="resetScores()" class="bg-red-600 hover:bg-red-700 font-bold px-4 py-2 rounded-lg text-sm shadow transition">Reset Skor Tim</button>
+                    <button onclick="saveSettings()" class="bg-green-600 hover:bg-green-700 font-bold px-6 py-2 rounded-lg text-sm shadow transition">Simpan Pengaturan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME 1: MEMORY MATRIX -->
+        <div id="memory-game-container" class="hidden">
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-yellow-300" id="memory-level-title">Level 1: Memori Elemen Matriks</h2>
+                    <p class="text-sm text-indigo-200">Perhatikan matriks di bawah ini dalam waktu <span id="timer-display" class="font-bold text-pink-400">5</span> detik!</p>
+                </div>
+                <button onclick="backToMenu()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Kembali ke Menu</button>
+            </div>
+
+            <div id="memory-scoreboard" class="flex flex-wrap justify-center gap-4 bg-black/30 p-3 rounded-xl mb-6 text-center"></div>
+
+            <div id="memory-stage" class="text-center py-6">
+                <div id="matrix-view" class="mb-6"></div>
+                <div id="memory-question-box" class="hidden bg-white/20 p-6 rounded-xl max-w-md mx-auto">
+                    <div class="flex justify-center mb-4"><div class="timer-pill px-4 py-2 rounded-full bg-pink-500/20 border border-pink-300/30 text-pink-200 font-extrabold">⏱️ <span id="memory-answer-timer">02:00</span></div></div>
+                    <p id="memory-question-text" class="text-xl font-semibold mb-4"></p>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm text-indigo-200 mb-1">Pilih Tim yang Menjawab:</label>
+                        <select id="memory-team-select" class="w-full px-4 py-2 rounded-lg text-gray-900 font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                        </select>
+                    </div>
+
+                    <div class="flex gap-3 justify-center">
+                        <input type="number" id="memory-answer-input" placeholder="Jawaban angka..." class="px-4 py-2 rounded-lg text-gray-900 font-bold focus:outline-none w-2/3">
+                        <button onclick="checkMemoryAnswer()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold px-4 py-2 rounded-lg transition shadow w-1/3">Jawab</button>
+                    </div>
+                    <p id="memory-feedback" class="mt-4 font-bold text-lg"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME 2: MATRIX BINGO QUIZ -->
+        <div id="quiz-game-container" class="hidden">
+            <div class="flex justify-between items-center mb-4 border-b border-white/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-yellow-300">MATRIX BINGO 6×6</h2>
+                    <p class="text-sm text-indigo-200">Jawab soal untuk merebut kotak. Bentuk garis 6 kotak secara horizontal, vertikal, atau diagonal untuk menang!</p>
+                </div>
+                <button onclick="backToMenu()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition">Kembali ke Menu</button>
+            </div>
+
+            <div id="quiz-scoreboard" class="flex flex-wrap justify-center gap-4 bg-black/30 p-3 rounded-xl mb-6 text-center"></div>
+            <div id="bingo-grid" class="grid grid-cols-6 gap-2 sm:gap-3 mb-6 max-w-3xl mx-auto"></div>
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6 text-xs font-bold" id="bingo-legend"></div>
+
+
+            <div id="quiz-modal" class="hidden fixed inset-0 z-[100] flex items-start justify-center p-4 sm:p-6 pt-[6vh] sm:pt-[8vh] bg-slate-950/80 backdrop-blur-md" onclick="if(event.target===this) closeQuizModal()">
+                <div class="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 p-5 sm:p-7 rounded-3xl border-2 border-white/20 shadow-2xl" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-4 gap-3">
+                    <h3 id="quiz-modal-title" class="text-xl font-bold text-yellow-300">Soal #</h3>
+                    <div class="timer-pill px-4 py-2 rounded-full bg-cyan-500/20 border border-cyan-300/30 text-cyan-200 font-extrabold text-sm">⏱️ <span id="bingo-answer-timer">05:00</span></div>
+                    <button onclick="closeQuizModal()" class="text-red-400 hover:text-red-300 font-bold">Tutup [X]</button>
+                </div>
+                <div id="quiz-question-content" class="mb-6 p-5 bg-black/20 rounded-lg overflow-auto max-h-[45vh] leading-relaxed" style="font-size:22px"></div>
+                <div class="mb-4">
+                    <div id="quiz-answer-key" class="text-sm font-semibold text-green-300 bg-emerald-900/40 p-3 rounded mb-4 hidden overflow-auto"></div>
+                    <button onclick="toggleAnswerKey()" class="text-xs bg-indigo-700 hover:bg-indigo-600 px-3 py-1 rounded">Lihat Kunci Jawaban</button>
+                </div>
+                <div class="border-t border-white/20 pt-4 mt-4">
+                    <p class="text-sm mb-2 text-indigo-200">Jika jawaban benar, pilih tim yang mendapat kotak:</p>
+                    <div id="quiz-award-buttons" class="flex flex-wrap gap-2"></div>
+                    <button onclick="markBingoWrong()" class="mt-3 w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-bold shadow transition">✗ Jawaban Salah</button>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDITOR SOAL CONTAINER -->
+        <div id="editor-container" class="hidden w-full">
+            <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-yellow-300">Editor Soal dengan Math Equation Toolbar</h2>
+                    <p class="text-sm text-indigo-200">Klik ikon equation di atas kotak teks untuk menyisipkan rumus secara otomatis (seperti Microsoft Word).</p>
+                </div>
+                <button onclick="backToMenu()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition flex-shrink-0">Kembali ke Menu</button>
+            </div>
+            
+            <div class="mb-4 flex flex-wrap gap-4 bg-black/20 p-4 rounded-xl items-center justify-between">
+                <div class="text-xs text-indigo-200">
+                    <p><strong>Info:</strong> Apit rumus dengan tanda <code>\$ ... \$</code> agar dikenali sebagai Matematika.</p>
+                </div>
+                <div>
+                    <button onclick="saveCustomQuestions()" class="bg-green-600 hover:bg-green-700 font-bold px-4 py-2 rounded-lg text-sm shadow">Simpan Semua Perubahan Soal</button>
+                    <button onclick="resetDefaultQuestions()" class="bg-red-600 hover:bg-red-700 font-bold px-4 py-2 rounded-lg text-sm shadow ml-2">Reset ke Awal</button>
+                </div>
+            </div>
+
+            <div id="editor-list" class="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Script Game Logic -->
+    <script>
+        // --- DATA & STATE ---
+        const defaultQuizData = [
+            { id: 1, q: "Diketahui $A=\\begin{pmatrix} x \\\\ 5 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 3 \\\\ y \\end{pmatrix}$. Tentukan $2x+3y=\\dots$", key: "21 (jika x=3, y=5)" },
+            { id: 2, q: "Jika $A=\\begin{pmatrix} 2 & -1 \\\\ 3 & 4 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 1 & 0 \\\\ -2 & 5 \\end{pmatrix}$, hitung hasil perkalian matriks $AB$.", key: "$\\begin{pmatrix} 4 & -5 \\\\ -5 & 20 \\end{pmatrix}$" },
+            { id: 3, q: "Diketahui $A=\\begin{pmatrix} 1 & 0 \\\\ 2 & 3 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 4 & 1 \\\\ -1 & 2 \\end{pmatrix}$. Tentukan $(A+B)^T$!", key: "$\\begin{pmatrix} 5 & 1 \\\\ 1 & 5 \\end{pmatrix}$" },
+            { id: 4, q: "Diketahui $\\begin{pmatrix} x^2-1 & 4 \\\\ 2 & y+3 \\end{pmatrix} = \\begin{pmatrix} 8 & 4 \\\\ 2 & 7 \\end{pmatrix}$. Tentukan nilai $x$ dan $y$!", key: "$x = \\pm 3$ dan $y = 4$" },
+            { id: 5, q: "Jika $\\begin{pmatrix} 2a & b \\\\ a-b & 4 \\end{pmatrix} = \\begin{pmatrix} 6 & 5 \\\\ -1 & 4 \\end{pmatrix}$, tentukan nilai $a$ dan $b$!", key: "$a = 2, b = 5$" },
+            { id: 6, q: "Tentukan nilai $m$ dan $n$ jika $\\begin{pmatrix} m+n & m-n \\\\ 2 & 3 \\end{pmatrix} = \\begin{pmatrix} 6 & 2 \\\\ 2 & 3 \\end{pmatrix}$!", key: "$m = 4, n = 2$" },
+            { id: 7, q: "Diketahui $\\begin{pmatrix} x+2y & 3 \\\\ 4 & x-y \\end{pmatrix} = \\begin{pmatrix} 8 & 3 \\\\ 4 & 1 \\end{pmatrix}$. Tentukan nilai $x$ dan $y$!", key: "$x = 4, y = 2$" },
+            { id: 8, q: "Diketahui $A=\\begin{pmatrix} 2 & 3 \\\\ -1 & 4 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 1 & -2 \\\\ 3 & 5 \\end{pmatrix}$. Tentukan $A+B$", key: "$\\begin{pmatrix} 3 & 1 \\\\ 2 & 9 \\end{pmatrix}$" },
+            { id: 9, q: "Jika $P=\\begin{pmatrix} 5 & 0 \\\\ 2 & -3 \\end{pmatrix}$ dan $Q=\\begin{pmatrix} -2 & 4 \\\\ 1 & 6 \\end{pmatrix}$, hitung $P-Q$", key: "$\\begin{pmatrix} 7 & -4 \\\\ 1 & -9 \\end{pmatrix}$" },
+            { id: 10, q: "Jika $A=\\begin{pmatrix} 2 & 1 \\\\ 0 & 4 \\end{pmatrix}$ dan $B=\\begin{pmatrix} -1 & 3 \\\\ 2 & 5 \\end{pmatrix}$, hitung $2A-3B$!", key: "$\\begin{pmatrix} 7 & -7 \\\\ -6 & -7 \\end{pmatrix}$" },
+            { id: 11, q: "Diketahui $X=\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}$ dan $Y=\\begin{pmatrix} 0 & -1 \\\\ 2 & 3 \\end{pmatrix}$. Tentukan $XY$!", key: "$\\begin{pmatrix} 4 & 5 \\\\ 8 & 9 \\end{pmatrix}$" },
+            { id: 12, q: "Diketahui $M=\\begin{pmatrix} 1 & 2 & 3 \\end{pmatrix}$ dan $N=\\begin{pmatrix} 4 \\\\ 5 \\\\ 6 \\end{pmatrix}$. Tentukan $MN$!", key: "$(32)$" },
+            { id: 13, q: "Tentukan transpose dari matriks $R=\\begin{pmatrix} 2 & 5 & 1 \\\\ 0 & 3 & 4 \\end{pmatrix}$!", key: "$R^T = \\begin{pmatrix} 2 & 0 \\\\ 5 & 3 \\\\ 1 & 4 \\end{pmatrix}$" },
+            { id: 14, q: "Diketahui $A=\\begin{pmatrix} 1 & 0 \\\\ 2 & 3 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 4 & 1 \\\\ -1 & 2 \\end{pmatrix}$. Tentukan $(A+B)^T$!", key: "$\\begin{pmatrix} 5 & 1 \\\\ 1 & 5 \\end{pmatrix}$" },
+            { id: 15, q: "Jika $A=\\begin{pmatrix} 2 & 1 \\\\ -1 & 3 \\end{pmatrix}$, tentukan $A+A^T$!", key: "$\\begin{pmatrix} 4 & 0 \\\\ 0 & 6 \\end{pmatrix}$" },
+            { id: 16, q: "Jika $A=\\begin{pmatrix} 2 & -1 \\\\ 3 & 4 \\end{pmatrix}$ dan $I=\\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$, tentukan $A^2-3A+2I$!", key: "Matriks Nol" },
+            { id: 17, q: "Diketahui $A=\\begin{pmatrix} 3 & 2 \\\\ 1 & 4 \\end{pmatrix}$. Nilai determinan matriks $A$ adalah...", key: "10" },
+            { id: 18, q: "Diketahui $A=\\begin{pmatrix} 5 & -2 \\\\ 3 & 1 \\end{pmatrix}$. Nilai $\\det(A)$ adalah...", key: "11" },
+            { id: 19, q: "Diketahui $A=\\begin{pmatrix} a & 2 \\\\ 3 & 4 \\end{pmatrix}$. Jika $\\det(A)=10$, nilai $a$ adalah...", key: "4" },
+            { id: 20, q: "Diketahui $A=\\begin{pmatrix} 2 & 1 \\\\ 3 & 2 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 1 & 2 \\\\ 4 & 3 \\end{pmatrix}$. Tentukan $\\det(AB)$!", key: "-5" },
+            { id: 21, q: "Matriks berikut yang tidak memiliki invers adalah... (Cek determinan = 0)", key: "C" },
+            { id: 22, q: "Diketahui $A=\\begin{pmatrix} x & 2 \\\\ 3 & 4 \\end{pmatrix}$. Jika $\\det(A)=14$, tentukan nilai $x$!", key: "5" },
+            { id: 23, q: "Invers dari matriks $A=\\begin{pmatrix} 2 & 1 \\\\ 5 & 3 \\end{pmatrix}$ adalah...", key: "$\\begin{pmatrix} 3 & -1 \\\\ -5 & 2 \\end{pmatrix}$" },
+            { id: 24, q: "Jika determinan suatu matriks sama dengan 0, apakah matriks tersebut mempunyai invers? Jelaskan!", key: "Tidak, karena pembagian dengan determinan nol." },
+            { id: 25, q: "Diketahui $A=\\begin{pmatrix} 3 & 1 \\\\ 2 & 4 \\end{pmatrix}$. Tentukan $\\det(A)$!", key: "10" },
+            { id: 26, q: "Jika $A=\\begin{pmatrix} 2 & -1 \\\\ 5 & 3 \\end{pmatrix}$, tentukan $A^T$!", key: "$\\begin{pmatrix} 2 & 5 \\\\ -1 & 3 \\end{pmatrix}$" },
+            { id: 27, q: "Diketahui $A=\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 2 & 0 \\\\ 1 & 3 \\end{pmatrix}$. Tentukan $A-B$!", key: "$\\begin{pmatrix} -1 & 2 \\\\ 2 & 1 \\end{pmatrix}$" },
+            { id: 28, q: "Jika $A=\\begin{pmatrix} 2 & 1 \\\\ 0 & 3 \\end{pmatrix}$, tentukan $2A$!", key: "$\\begin{pmatrix} 4 & 2 \\\\ 0 & 6 \\end{pmatrix}$" },
+            { id: 29, q: "Diketahui $A=\\begin{pmatrix} 1 & 2 \\\\ 0 & 1 \\end{pmatrix}$ dan $B=\\begin{pmatrix} 3 & 1 \\\\ 2 & 4 \\end{pmatrix}$. Tentukan elemen $(AB)_{12}$!", key: "9" },
+            { id: 30, q: "Tentukan determinan dari $A=\\begin{pmatrix} 6 & 2 \\\\ 3 & 1 \\end{pmatrix}$!", key: "0" },
+            { id: 31, q: "Jika $A=\\begin{pmatrix} 4 & 0 & 2 \\\\ 1 & 3 & 5 \\end{pmatrix}$, berapakah ordo matriks $A$?", key: "2 × 3" },
+            { id: 32, q: "Diketahui $A=\\begin{pmatrix} 2 & 4 \\\\ 1 & 3 \\end{pmatrix}$. Tentukan jumlah elemen diagonal utama matriks $A$!", key: "5" },
+            { id: 33, q: "Jika $A=\\begin{pmatrix} 1 & 3 \\\\ 2 & 5 \\end{pmatrix}$, tentukan nilai $a_{21}+a_{12}$!", key: "5" },
+            { id: 34, q: "Diketahui $A=\\begin{pmatrix} 2 & 1 \\\\ 4 & 3 \\end{pmatrix}$. Tentukan $\\det(A)$!", key: "2" },
+            { id: 35, q: "Jika $A=\\begin{pmatrix} 5 & -2 \\\\ 1 & 4 \\end{pmatrix}$, berapakah nilai $a_{11}-a_{21}$?", key: "4" },
+            { id: 36, q: "Diketahui $A=\\begin{pmatrix} 2 & 3 \\\\ 1 & 2 \\end{pmatrix}$. Tentukan invers $A^{-1}$!", key: "$\\begin{pmatrix} 2 & -3 \\\\ -1 & 2 \\end{pmatrix}$" },
+        ];
+
+        let storedQuizData = JSON.parse(localStorage.getItem('matrix_quiz_data'));
+        let quizData = storedQuizData && storedQuizData.length >= 36 ? storedQuizData.slice(0, 36) : JSON.parse(JSON.stringify(defaultQuizData));
+        
+        let defaultTeams = [
+            { id: 0, name: "Tim 1", score: 0 },
+            { id: 1, name: "Tim 2", score: 0 }
+        ];
+        let teams = JSON.parse(localStorage.getItem('matrix_teams_data')) || defaultTeams;
+
+        // --- DATA GAME MEMORI ---
+        // Setiap level terdiri dari 6 soal.
+        // Setiap soal memiliki matriks sendiri, pertanyaan, dan jawaban.
+        const memoryLevels = [
+            {
+                level: 1,
+                title: "Memori Elemen Matriks",
+                questions: [
+                    { matrix: [[4,-5,7],[3,6,-8],[-5,2,1]], q: "Berapa hasil dari $a_{23}+a_{12}$?", ans: -13 },
+                    { matrix: [[2,5,-1],[4,-3,6],[7,1,8]], q: "Berapa nilai $a_{31}-a_{12}$?", ans: 2 },
+                    { matrix: [[6,-2,4],[1,5,-3],[8,0,7]], q: "Berapa hasil dari $a_{21}+a_{32}$?", ans: 1 },
+                    { matrix: [[3,7,2],[-4,5,1],[6,-2,9]], q: "Berapa hasil dari $a_{13}\\times a_{31}$?", ans: 12 },
+                    { matrix: [[9,1,-5],[2,6,4],[-3,8,7]], q: "Berapa nilai $a_{22}-a_{13}$?", ans: 11 },
+                    { matrix: [[5,-3,2],[7,4,-1],[6,8,9]], q: "Berapa hasil dari $a_{11}+a_{23}$?", ans: 4 }
+                ]
+            },
+            {
+                level: 2,
+                title: "Operasi Elemen Matriks",
+                questions: [
+                    { matrix: [[8,-3,9],[2,1,-2],[-3,5,9]], q: "Berapa hasil dari $a_{31}-a_{13}$?", ans: -12 },
+                    { matrix: [[4,6,-2],[3,-5,7],[1,8,9]], q: "Berapa hasil dari $a_{12}+a_{21}$?", ans: 9 },
+                    { matrix: [[7,-1,5],[2,6,-4],[3,9,8]], q: "Berapa hasil dari $a_{33}-a_{22}$?", ans: 2 },
+                    { matrix: [[1,4,8],[-2,5,3],[6,7,-1]], q: "Berapa hasil dari $a_{13}+a_{32}$?", ans: 15 },
+                    { matrix: [[5,2,-6],[4,9,1],[-3,7,8]], q: "Berapa hasil dari $a_{21}\\times a_{12}$?", ans: 8 },
+                    { matrix: [[6,-4,3],[2,7,5],[9,1,-2]], q: "Berapa hasil dari $a_{11}-a_{33}$?", ans: 8 }
+                ]
+            },
+            {
+                level: 3,
+                title: "Determinan Matriks",
+                questions: [
+                    { matrix: [[3,2],[1,4]], q: "Tentukan determinan matriks tersebut.", ans: 10 },
+                    { matrix: [[5,-2],[3,1]], q: "Tentukan nilai $\\det(A)$.", ans: 11 },
+                    { matrix: [[4,1],[2,3]], q: "Tentukan determinan matriks tersebut.", ans: 10 },
+                    { matrix: [[7,2],[3,5]], q: "Tentukan nilai $\\det(A)$.", ans: 29 },
+                    { matrix: [[6,-1],[4,2]], q: "Tentukan determinan matriks tersebut.", ans: 16 },
+                    { matrix: [[8,3],[2,5]], q: "Tentukan nilai determinannya.", ans: 34 }
+                ]
+            }
+        ];
+
+        let currentMemoryLevel = 0;
+        let currentMemoryQuestion = 0;
+        let memoryTimer = null;
+        let memoryAnswerTimer = null;
+        let bingoAnswerTimer = null;
+        let memoryAnswerTime = Math.min(Math.max(parseInt(localStorage.getItem('matrix_memory_answer_time'), 10) || 120, 10), 120);
+        let bingoAnswerTime = Math.min(Math.max(parseInt(localStorage.getItem('matrix_bingo_answer_time'), 10) || 300, 10), 300);
+        let bingoFontSize = Math.min(Math.max(parseInt(localStorage.getItem('matrix_bingo_font_size'), 10) || 22, 14), 40);
+        let activeQuestionId = null;
+
+        // Durasi tampilan matriks per level.
+        let memoryLevelTimes = [
+            Math.min(Math.max(parseInt(localStorage.getItem('matrix_memory_l1_time'), 10) || 5, 1), 60),
+            Math.min(Math.max(parseInt(localStorage.getItem('matrix_memory_l2_time'), 10) || 7, 1), 60),
+            Math.min(Math.max(parseInt(localStorage.getItem('matrix_memory_l3_time'), 10) || 10, 1), 60)
+        ];
+        let memoryDisplayTime = memoryLevelTimes[0];
+
+        // Colors for teams
+        const teamColors = ['text-pink-400', 'text-teal-400', 'text-yellow-400', 'text-blue-400', 'text-purple-400', 'text-orange-400'];
+        const teamBgColors = ['bg-red-600 hover:bg-red-700', 'bg-green-600 hover:bg-green-700', 'bg-blue-600 hover:bg-blue-700', 'bg-yellow-500 hover:bg-yellow-600', 'bg-purple-600 hover:bg-purple-700', 'bg-orange-600 hover:bg-orange-700'];
+        const bingoOwnerClasses = ['bg-red-500 border-red-300 text-white', 'bg-green-500 border-green-300 text-white', 'bg-blue-500 border-blue-300 text-white', 'bg-yellow-400 border-yellow-200 text-gray-900', 'bg-purple-500 border-purple-300 text-white', 'bg-orange-500 border-orange-300 text-white'];
+        const bingoOwnerLabels = ['Tim 1', 'Tim 2', 'Tim 3', 'Tim 4', 'Tim 5', 'Tim 6'];
+        let bingoOwners = {};
+
+        // --- NAVIGATION ---
+        function backToMenu() {
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('settings-container').classList.add('hidden');
+            document.getElementById('memory-game-container').classList.add('hidden');
+            document.getElementById('quiz-game-container').classList.add('hidden');
+            document.getElementById('editor-container').classList.add('hidden');
+        }
+
+        // --- SETTINGS (TEAM MANAGEMENT) ---
+        function openSettings() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('settings-container').classList.remove('hidden');
+            document.getElementById('num-teams-input').value = teams.length;
+            const memoryInput = document.getElementById('memory-time-input');
+            const memoryAnswerInput = document.getElementById('memory-answer-time-input');
+            const bingoAnswerInput = document.getElementById('bingo-answer-time-input');
+            const bingoFontInput = document.getElementById('bingo-font-size-input');
+            if (memoryInput) memoryInput.value = memoryDisplayTime;
+            const l1 = document.getElementById('memory-l1-time-input');
+            const l2 = document.getElementById('memory-l2-time-input');
+            const l3 = document.getElementById('memory-l3-time-input');
+            if (l1) l1.value = memoryLevelTimes[0];
+            if (l2) l2.value = memoryLevelTimes[1];
+            if (l3) l3.value = memoryLevelTimes[2];
+            if (memoryAnswerInput) memoryAnswerInput.value = memoryAnswerTime;
+            if (bingoAnswerInput) bingoAnswerInput.value = bingoAnswerTime;
+            if (bingoFontInput) bingoFontInput.value = bingoFontSize;
+            generateTeamInputs();
+        }
+
+        function generateTeamInputs() {
+            const num = Math.min(Math.max(parseInt(document.getElementById('num-teams-input').value) || 2, 2), 6);
+            const container = document.getElementById('team-names-container');
+            let html = '';
+            for(let i=0; i<num; i++) {
+                const currentName = teams[i] ? teams[i].name : `Tim ${i+1}`;
+                html += `
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-700 text-white font-bold">${i+1}</span>
+                        <input type="text" id="team-name-${i}" value="${currentName}" placeholder="Nama Tim ${i+1}" class="flex-1 px-3 py-2 rounded-lg text-gray-900 focus:outline-none">
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function saveSettings() {
+            const num = Math.min(Math.max(parseInt(document.getElementById('num-teams-input').value) || 2, 2), 6);
+            let newTeams = [];
+            for(let i=0; i<num; i++) {
+                const name = document.getElementById(`team-name-${i}`).value || `Tim ${i+1}`;
+                const existingScore = teams[i] ? teams[i].score : 0;
+                newTeams.push({ id: i, name: name, score: existingScore });
+            }
+            teams = newTeams;
+
+            // Simpan seluruh durasi game.
+            const memoryInput = document.getElementById('memory-time-input');
+            const memoryAnswerInput = document.getElementById('memory-answer-time-input');
+            const bingoAnswerInput = document.getElementById('bingo-answer-time-input');
+            const bingoFontInput = document.getElementById('bingo-font-size-input');
+            const enteredMemoryTime = memoryInput ? parseInt(memoryInput.value, 10) : memoryDisplayTime;
+            const enteredMemoryAnswer = memoryAnswerInput ? parseInt(memoryAnswerInput.value, 10) : memoryAnswerTime;
+            const enteredBingoAnswer = bingoAnswerInput ? parseInt(bingoAnswerInput.value, 10) : bingoAnswerTime;
+            const enteredBingoFont = bingoFontInput ? parseInt(bingoFontInput.value, 10) : bingoFontSize;
+            const l1Input = document.getElementById('memory-l1-time-input');
+            const l2Input = document.getElementById('memory-l2-time-input');
+            const l3Input = document.getElementById('memory-l3-time-input');
+            const enteredL1 = l1Input ? parseInt(l1Input.value, 10) : memoryLevelTimes[0];
+            const enteredL2 = l2Input ? parseInt(l2Input.value, 10) : memoryLevelTimes[1];
+            const enteredL3 = l3Input ? parseInt(l3Input.value, 10) : memoryLevelTimes[2];
+
+            memoryLevelTimes = [
+                Math.min(Math.max(Number.isFinite(enteredL1) ? enteredL1 : 5, 1), 60),
+                Math.min(Math.max(Number.isFinite(enteredL2) ? enteredL2 : 7, 1), 60),
+                Math.min(Math.max(Number.isFinite(enteredL3) ? enteredL3 : 10, 1), 60)
+            ];
+            memoryDisplayTime = memoryLevelTimes[0];
+
+            memoryDisplayTime = Math.min(Math.max(Number.isFinite(enteredMemoryTime) ? enteredMemoryTime : 5, 1), 60);
+            memoryAnswerTime = Math.min(Math.max(Number.isFinite(enteredMemoryAnswer) ? enteredMemoryAnswer : 120, 10), 120);
+            bingoAnswerTime = Math.min(Math.max(Number.isFinite(enteredBingoAnswer) ? enteredBingoAnswer : 300, 10), 300);
+            bingoFontSize = Math.min(Math.max(Number.isFinite(enteredBingoFont) ? enteredBingoFont : 22, 14), 40);
+
+            if (memoryInput) memoryInput.value = memoryDisplayTime;
+            if (memoryAnswerInput) memoryAnswerInput.value = memoryAnswerTime;
+            if (bingoAnswerInput) bingoAnswerInput.value = bingoAnswerTime;
+            if (bingoFontInput) bingoFontInput.value = bingoFontSize;
+            localStorage.setItem('matrix_teams_data', JSON.stringify(teams));
+            localStorage.setItem('matrix_memory_time', String(memoryLevelTimes[0]));
+            localStorage.setItem('matrix_memory_l1_time', String(memoryLevelTimes[0]));
+            localStorage.setItem('matrix_memory_l2_time', String(memoryLevelTimes[1]));
+            localStorage.setItem('matrix_memory_l3_time', String(memoryLevelTimes[2]));
+            localStorage.setItem('matrix_memory_answer_time', String(memoryAnswerTime));
+            localStorage.setItem('matrix_bingo_answer_time', String(bingoAnswerTime));
+            localStorage.setItem('matrix_bingo_font_size', String(bingoFontSize));
+
+            alert(`Pengaturan berhasil disimpan! Memori: L1 ${memoryLevelTimes[0]} dtk, L2 ${memoryLevelTimes[1]} dtk, L3 ${memoryLevelTimes[2]} dtk. Waktu menjawab: ${memoryAnswerTime} dtk. Bingo: ${bingoAnswerTime} dtk/soal.`);
+            backToMenu();
+        }
+
+        function resetScores() {
+            if(confirm("Anda yakin ingin mengembalikan semua skor tim menjadi 0?")) {
+                teams.forEach(t => t.score = 0);
+                localStorage.setItem('matrix_teams_data', JSON.stringify(teams));
+                alert("Skor berhasil direset.");
+            }
+        }
+
+        function renderScoreboard(containerId) {
+            const container = document.getElementById(containerId);
+            let html = '';
+            teams.forEach((t, i) => {
+                const colorClass = teamColors[i % teamColors.length];
+                html += `
+                    <div class="min-w-[100px] px-2">
+                        <span class="text-[10px] text-indigo-300 uppercase">${t.name}</span>
+                        <div id="${containerId}-score-${t.id}" class="text-2xl font-bold ${colorClass}">${t.score}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- GAME 1: MEMORY ---
+        function startMemoryGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('memory-game-container').classList.remove('hidden');
+
+            renderScoreboard('memory-scoreboard');
+
+            const select = document.getElementById('memory-team-select');
+            select.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+            currentMemoryLevel = 0;
+            currentMemoryQuestion = 0;
+            loadMemoryQuestion();
+        }
+
+        function loadMemoryQuestion() {
+            if (memoryTimer) { clearInterval(memoryTimer); memoryTimer = null; }
+            if (memoryAnswerTimer) { clearInterval(memoryAnswerTimer); memoryAnswerTimer = null; }
+
+            const level = memoryLevels[currentMemoryLevel];
+
+            if (!level) {
+                alert("Selamat! Semua level Game Memori telah diselesaikan!");
+                backToMenu();
+                return;
+            }
+
+            const question = level.questions[currentMemoryQuestion];
+
+            if (!question) {
+                currentMemoryLevel++;
+                currentMemoryQuestion = 0;
+                loadMemoryQuestion();
+                return;
+            }
+
+            document.getElementById('memory-level-title').innerText =
+                `Level ${level.level}: ${level.title}`;
+
+            document.getElementById('memory-question-box').classList.add('hidden');
+            document.getElementById('memory-feedback').innerText = '';
+
+            // Progress: Soal ke-x dari 6.
+            const subtitle = document.querySelector('#memory-game-container p.text-sm');
+            if (subtitle) {
+                subtitle.innerHTML =
+                    `Soal <strong class="text-yellow-300">${currentMemoryQuestion + 1}</strong> dari <strong class="text-yellow-300">${level.questions.length}</strong> · Hafalkan matriks selama <span id="timer-display" class="font-bold text-pink-400">${memoryDisplayTime}</span> detik!`;
+            }
+
+            // Render matriks sesuai ukuran.
+            const rows = question.matrix.length;
+            const cols = question.matrix[0].length;
+
+            let matrixHtml =
+                `<div class="text-lg font-bold mb-2">Hafalkan Matriks Ini:</div>
+                 <div class="inline-grid gap-2 bg-black/40 p-4 rounded-xl border border-white/30"
+                      style="grid-template-columns: repeat(${cols}, minmax(52px, 1fr));">`;
+
+            question.matrix.forEach(row => {
+                row.forEach(value => {
+                    matrixHtml +=
+                        `<div class="w-16 h-16 flex items-center justify-center bg-indigo-800 rounded-lg text-2xl font-bold shadow-inner">${value}</div>`;
+                });
+            });
+
+            matrixHtml += `</div>`;
+
+            document.getElementById('matrix-view').innerHTML = matrixHtml;
+
+            memoryDisplayTime = memoryLevelTimes[currentMemoryLevel] ?? memoryLevelTimes[0];
+            let timeLeft = memoryDisplayTime;
+            const timerDisplay = document.getElementById('timer-display');
+            if (timerDisplay) timerDisplay.innerText = timeLeft;
+
+            memoryTimer = setInterval(() => {
+                timeLeft--;
+
+                const display = document.getElementById('timer-display');
+                if (display) display.innerText = Math.max(timeLeft, 0);
+
+                if (timeLeft <= 0) {
+                    clearInterval(memoryTimer);
+                    memoryTimer = null;
+                    showMemoryQuestion();
+                }
+            }, 1000);
+        }
+
+        function showMemoryQuestion() {
+            const level = memoryLevels[currentMemoryLevel];
+            const question = level.questions[currentMemoryQuestion];
+
+            document.getElementById('matrix-view').innerHTML =
+                `<div class="text-xl font-bold text-pink-400 mb-4">Waktu Habis! Matriks Ditutup.</div>`;
+
+            document.getElementById('memory-question-box').classList.remove('hidden');
+            document.getElementById('memory-question-text').innerHTML = question.q;
+            document.getElementById('memory-answer-input').value = '';
+            document.getElementById('memory-feedback').innerText = '';
+            startMemoryAnswerTimer();
+
+            if (window.MathJax) {
+                MathJax.typesetPromise([
+                    document.getElementById('memory-question-text')
+                ]).catch(() => {});
+            }
+        }
+
+        function formatTime(totalSeconds) {
+            const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const sec = (totalSeconds % 60).toString().padStart(2, '0');
+            return `${m}:${sec}`;
+        }
+
+        function startMemoryAnswerTimer() {
+            if (memoryAnswerTimer) clearInterval(memoryAnswerTimer);
+            let remaining = memoryAnswerTime;
+            const display = document.getElementById('memory-answer-timer');
+            if (display) display.innerText = formatTime(remaining);
+            memoryAnswerTimer = setInterval(() => {
+                remaining--;
+                if (display) display.innerText = formatTime(Math.max(remaining, 0));
+                if (remaining <= 0) {
+                    clearInterval(memoryAnswerTimer); memoryAnswerTimer = null;
+                    const feedback = document.getElementById('memory-feedback');
+                    feedback.className = 'mt-4 font-bold text-lg text-orange-300';
+                    feedback.innerText = '⏰ Waktu menjawab habis. Lanjut ke soal berikutnya.';
+                    setTimeout(() => advanceMemoryQuestion(), 900);
+                }
+            }, 1000);
+        }
+
+        function advanceMemoryQuestion() {
+            if (memoryAnswerTimer) { clearInterval(memoryAnswerTimer); memoryAnswerTimer = null; }
+            const level = memoryLevels[currentMemoryLevel];
+            currentMemoryQuestion++;
+            if (currentMemoryQuestion < level.questions.length) {
+                loadMemoryQuestion();
+            } else {
+                currentMemoryLevel++; currentMemoryQuestion = 0;
+                if (currentMemoryLevel < memoryLevels.length) loadMemoryQuestion();
+                else { alert('🎉 Selamat! Semua level Game Memori telah diselesaikan!'); backToMenu(); }
+            }
+        }
+
+        function checkMemoryAnswer() {
+            if (memoryAnswerTimer) { clearInterval(memoryAnswerTimer); memoryAnswerTimer = null; }
+            const userAns = parseFloat(document.getElementById('memory-answer-input').value);
+            const level = memoryLevels[currentMemoryLevel];
+            const question = level.questions[currentMemoryQuestion];
+            const correctAns = question.ans;
+            const feedback = document.getElementById('memory-feedback');
+            const teamId = parseInt(document.getElementById('memory-team-select').value, 10);
+            const team = teams.find(t => t.id === teamId);
+
+            if (!Number.isFinite(userAns)) {
+                feedback.className = "mt-4 font-bold text-lg text-orange-400";
+                feedback.innerText = "Masukkan jawaban angka!";
+                return;
+            }
+
+            const isCorrect = userAns === correctAns;
+
+            if (isCorrect) {
+                playGameSound('correct');
+                feedback.className = "mt-4 font-bold text-lg text-green-400";
+                feedback.innerText =
+                    `Benar! +10 Poin untuk ${team.name}!`;
+                team.score += 10;
+                localStorage.setItem('matrix_teams_data', JSON.stringify(teams));
+                renderScoreboard('memory-scoreboard');
+                setTimeout(() => advanceMemoryQuestion(), 1500);
+            } else {
+                // Jangan tampilkan kunci jawaban. Murid boleh mencoba lagi pada soal yang sama.
+                playGameSound('wrong');
+                feedback.className = "mt-4 font-bold text-lg text-red-400";
+                feedback.innerText = "❌ Belum tepat. Coba lagi! Jawaban tidak ditampilkan.";
+                document.getElementById('memory-answer-input').value = '';
+                startMemoryAnswerTimer();
+                document.getElementById('memory-answer-input').focus();
+            }
+        }
+
+        // --- GAME 2: BINGO QUIZ ---
+        function startQuizGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('quiz-game-container').classList.remove('hidden');
+            bingoOwners = {};
+            renderScoreboard('quiz-scoreboard');
+            renderBingoLegend();
+            renderBingoGrid();
+        }
+
+        function renderBingoLegend() {
+            const legend = document.getElementById('bingo-legend');
+            if (!legend) return;
+            legend.innerHTML = teams.map((t, i) => `
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20">
+                    <span class="w-3 h-3 rounded-full ${bingoOwnerClasses[i % bingoOwnerClasses.length].split(' ')[0]}"></span>
+                    ${t.name}
+                </span>
+            `).join('') + '<span class="inline-flex items-center px-3 py-1.5 rounded-full bg-slate-700 border border-slate-500">⬜ Belum dijawab</span>';
+        }
+
+        function renderBingoGrid() {
+            const grid = document.getElementById('bingo-grid');
+            let html = '';
+            for (let id = 1; id <= 36; id++) {
+                const owner = bingoOwners[id];
+                const ownerTeam = owner !== undefined ? teams[owner] : null;
+                const ownerClass = owner !== undefined ? bingoOwnerClasses[owner % bingoOwnerClasses.length] : 'bg-gradient-to-br from-indigo-700 to-purple-800 hover:from-indigo-600 hover:to-purple-700 text-white';
+                const label = ownerTeam ? `<span class="block text-[9px] sm:text-[10px] leading-tight opacity-90">${ownerTeam.name}</span><span class="text-lg sm:text-2xl">✓</span>` : `<span class="text-lg sm:text-2xl">${id}</span>`;
+                html += `<button id="btn-q-${id}" onclick="openQuizModal(${id})" class="aspect-square min-h-[48px] ${ownerClass} rounded-xl font-extrabold shadow border-2 border-white/20 transition transform hover:scale-105 flex flex-col items-center justify-center ${owner !== undefined ? 'cursor-not-allowed' : ''}" ${owner !== undefined ? 'disabled' : ''}>${label}</button>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function openQuizModal(id) {
+            if (bingoOwners[id] !== undefined) return;
+            activeQuestionId = id;
+            const qObj = quizData.find(item => item.id === id);
+            if (!qObj) return;
+            document.getElementById('quiz-modal-title').innerText = `Soal Nomor ${id}`;
+            const questionContent = document.getElementById('quiz-question-content');
+            questionContent.innerHTML = qObj.q;
+            questionContent.style.fontSize = `${bingoFontSize}px`;
+            document.getElementById('quiz-answer-key').innerHTML = qObj.key;
+            document.getElementById('quiz-answer-key').classList.add('hidden');
+            const btnContainer = document.getElementById('quiz-award-buttons');
+            let btnHtml = '';
+            teams.forEach((t, i) => {
+                const bgClass = teamBgColors[i % teamBgColors.length];
+                btnHtml += `<button onclick="awardScore(${t.id})" class="${bgClass} px-4 py-2 rounded-lg font-bold text-sm shadow transition">✓ ${t.name} Ambil Kotak</button>`;
+            });
+            btnContainer.innerHTML = btnHtml;
+            document.getElementById('quiz-modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            startBingoAnswerTimer();
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById('quiz-question-content'), document.getElementById('quiz-answer-key')]);
+        }
+
+        function closeQuizModal() {
+            if (bingoAnswerTimer) { clearInterval(bingoAnswerTimer); bingoAnswerTimer = null; }
+            document.getElementById('quiz-modal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            activeQuestionId = null;
+        }
+
+        function startBingoAnswerTimer() {
+            if (bingoAnswerTimer) clearInterval(bingoAnswerTimer);
+            let remaining = bingoAnswerTime;
+            const display = document.getElementById('bingo-answer-timer');
+            if (display) display.innerText = formatTime(remaining);
+            bingoAnswerTimer = setInterval(() => {
+                remaining--;
+                if (display) display.innerText = formatTime(Math.max(remaining, 0));
+                if (remaining <= 0) {
+                    clearInterval(bingoAnswerTimer); bingoAnswerTimer = null;
+                    const id = activeQuestionId;
+                    closeQuizModal();
+                    if (id !== null) {
+                        const btn = document.getElementById(`btn-q-${id}`);
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="text-xl">⏰</span><span class="text-[9px]">HABIS</span>';
+                            btn.className = 'aspect-square min-h-[48px] bg-slate-800 text-slate-500 rounded-xl font-extrabold shadow border-2 border-slate-700 cursor-not-allowed flex flex-col items-center justify-center';
+                        }
+                    }
+                }
+            }, 1000);
+        }
+
+        function toggleAnswerKey() {
+            const keyBox = document.getElementById('quiz-answer-key');
+            keyBox.classList.toggle('hidden');
+        }
+
+        function playGameSound(type) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(660, now);
+                    osc.frequency.setValueAtTime(880, now + 0.12);
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+                    osc.start(now); osc.stop(now + 0.45);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.35);
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                }
+            } catch (e) {}
+        }
+
+        function markBingoWrong() {
+            if (activeQuestionId === null) return;
+            playGameSound('wrong');
+            closeQuizModal();
+        }
+
+        function checkBingoWin(teamId) {
+            const owned = id => bingoOwners[id] === teamId;
+            const lines = [];
+            for (let r = 0; r < 6; r++) lines.push(Array.from({length: 6}, (_, c) => r * 6 + c + 1));
+            for (let c = 0; c < 6; c++) lines.push(Array.from({length: 6}, (_, r) => r * 6 + c + 1));
+            lines.push(Array.from({length: 6}, (_, i) => i * 7 + 1));
+            lines.push(Array.from({length: 6}, (_, i) => (i + 1) * 5 + 1));
+            return lines.find(line => line.every(owned)) || null;
+        }
+
+        function awardScore(teamId) {
+            if (activeQuestionId === null || bingoOwners[activeQuestionId] !== undefined) return;
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+            bingoOwners[activeQuestionId] = teamId;
+            playGameSound('correct');
+            team.score += 10;
+            localStorage.setItem('matrix_teams_data', JSON.stringify(teams));
+            const winningLine = checkBingoWin(teamId);
+            closeQuizModal();
+            renderScoreboard('quiz-scoreboard');
+            renderBingoGrid();
+            renderBingoLegend();
+            if (winningLine) {
+                winningLine.forEach(id => {
+                    const cell = document.getElementById(`btn-q-${id}`);
+                    if (cell) cell.classList.add('ring-4', 'ring-white', 'animate-pulse');
+                });
+                setTimeout(() => alert(`🎉 BINGO! ${team.name} membentuk garis 6 kotak dan menang!\n\n+10 poin untuk soal ini. Total skor: ${team.score}`), 100);
+            }
+        }
+
+        // --- EDITOR SOAL DENGAN EQUATION TOOLBAR (WORD-STYLE) ---
+        function openEditor() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('editor-container').classList.remove('hidden');
+            renderEditorList();
+            requestAnimationFrame(attachEquationToolbars);
+        }
+
+        function insertAtCursor(textareaId, text) {
+            const el = document.getElementById(textareaId);
+            const start = el.selectionStart;
+            const end = el.selectionEnd;
+            const val = el.value;
+            el.value = val.substring(0, start) + text + val.substring(end);
+            el.selectionStart = el.selectionEnd = start + text.length;
+            el.focus();
+        }
+
+        // --- EQUATION TOOLBAR STABIL ---
+        // Tidak memakai inline onclick untuk menghindari kerusakan karakter "\" LaTeX.
+        const equationButtons = [
+            ["\\frac{x}{y}", "x/y", "Fraction"],
+            ["x^{2}", "eˣ", "Pangkat"],
+            ["x_{1}", "xₙ", "Subscript"],
+            ["\\sqrt{x}", "√x", "Radical"],
+            ["\\sqrt[n]{x}", "ⁿ√x", "N-Radical"],
+            ["\\int_{a}^{b} x\\,dx", "∫", "Integral"],
+            ["\\sum_{i=1}^{n}", "∑", "Sigma"],
+            ["\\left(\\,\\right)", "( )", "Bracket"],
+            ["\\sin(\\theta)", "sin θ", "Sinus"],
+            ["\\cos(\\theta)", "cos θ", "Cosinus"],
+            ["\\tan(\\theta)", "tan θ", "Tangen"],
+            ["\\log_{a}(x)", "logₐ", "Logaritma"],
+            ["\\lim_{x\\to\\infty}", "lim", "Limit"],
+            ["\\det(A)", "det(A)", "Determinan"],
+            ["A^{T}", "Aᵀ", "Transpose"],
+            ["A^{-1}", "A⁻¹", "Invers"],
+            ["\\begin{pmatrix}a & b \\\\ c & d\\end{pmatrix}", "[2×2]", "Matrix 2×2"],
+            ["\\begin{pmatrix}a & b & c \\\\ d & e & f \\\\ g & h & i\\end{pmatrix}", "[3×3]", "Matrix 3×3"],
+            ["\\begin{pmatrix}a & b & c\\end{pmatrix}", "[1×3]", "Matrix 1×3"],
+            ["\\begin{pmatrix}a \\\\ b \\\\ c\\end{pmatrix}", "[3×1]", "Matrix 3×1"]
+        ];
+
+        const msWordEquationToolbar = (id) => `
+            <div class="equation-toolbar flex gap-1 mb-2 overflow-x-auto bg-[#e1dfdd] p-1 rounded-t-lg border-b border-gray-400 shadow-inner select-none" data-target="${id}">
+                ${equationButtons.map(([latex, label, title]) => `
+                    <button type="button" class="equation-btn bg-white hover:bg-gray-100 active:bg-gray-200 text-black px-2 py-1 rounded text-xs flex flex-col items-center justify-center min-w-[54px] border border-transparent hover:border-gray-300 transition" data-latex="${encodeURIComponent(latex)}" title="${title}" aria-label="${title}">
+                        <span class="font-serif text-sm whitespace-nowrap">${label}</span>
+                        <span class="text-[9px] text-gray-500 mt-1 whitespace-nowrap">${title}</span>
+                    </button>
+                `).join("")}
+            </div>
+        `;
+
+        function insertAtCursor(textareaId, text) {
+            const el = document.getElementById(textareaId);
+            if (!el) return;
+
+            const start = typeof el.selectionStart === "number" ? el.selectionStart : el.value.length;
+            const end = typeof el.selectionEnd === "number" ? el.selectionEnd : start;
+            const value = el.value || "";
+
+            el.value = value.slice(0, start) + text + value.slice(end);
+            el.focus();
+
+            const pos = start + text.length;
+            el.setSelectionRange(pos, pos);
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
+        function attachEquationToolbars() {
+            document.querySelectorAll("#editor-list .equation-toolbar").forEach(toolbar => {
+                if (toolbar.dataset.bound === "1") return;
+                toolbar.dataset.bound = "1";
+
+                toolbar.addEventListener("click", event => {
+                    const button = event.target.closest(".equation-btn");
+                    if (!button) return;
+                    event.preventDefault();
+
+                    const targetId = toolbar.dataset.target;
+                    const latex = decodeURIComponent(button.dataset.latex || "");
+                    insertAtCursor(targetId, latex);
+                });
+            });
+        }
+
+        function renderMathJax(elements) {
+            if (!window.MathJax || typeof MathJax.typesetPromise !== "function") return;
+            MathJax.typesetPromise(elements).catch(err => {
+                console.warn("MathJax gagal merender equation:", err);
+            });
+        }
+
+        function renderEditorList() {
+            const listContainer = document.getElementById('editor-list');
+            let html = '';
+
+            quizData.forEach((item, index) => {
+                html += `
+                    <div class="bg-black/30 p-5 rounded-xl border border-white/20">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="font-bold text-yellow-300 text-lg">Soal Nomor ${item.id}</span>
+                            <button onclick="previewMath(${index})" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 text-xs font-bold rounded">Lihat Preview Tampilan</button>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- Pertanyaan -->
+                            <div>
+                                <label class="block text-sm font-semibold text-indigo-200 mb-2">Teks Pertanyaan (Soal):</label>
+                                ${msWordEquationToolbar(`edit-q-${index}`)}
+                                <textarea id="edit-q-${index}" rows="4" class="w-full px-3 py-2 rounded-b-lg text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">${item.q}</textarea>
+                            </div>
+                            
+                            <!-- Kunci Jawaban -->
+                            <div>
+                                <label class="block text-sm font-semibold text-indigo-200 mb-2">Kunci Jawaban:</label>
+                                ${msWordEquationToolbar(`edit-key-${index}`)}
+                                <textarea id="edit-key-${index}" rows="4" class="w-full px-3 py-2 rounded-b-lg text-gray-900 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-green-400">${item.key}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div id="preview-box-${index}" class="mt-4 p-4 bg-white/10 rounded-lg hidden">
+                            <div class="text-xs text-indigo-300 mb-2 uppercase">Preview Render Soal:</div>
+                            <div id="preview-q-${index}" class="mb-4 text-white bg-black/40 p-3 rounded"></div>
+                            <div class="text-xs text-indigo-300 mb-2 uppercase">Preview Render Jawaban:</div>
+                            <div id="preview-key-${index}" class="text-green-300 font-semibold bg-emerald-900/40 p-3 rounded"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+            attachEquationToolbars();
+
+            quizData.forEach((item, index) => {
+                const qEl = document.getElementById(`edit-q-${index}`);
+                const keyEl = document.getElementById(`edit-key-${index}`);
+                if (qEl) qEl.addEventListener("input", () => updateLivePreview(index));
+                if (keyEl) keyEl.addEventListener("input", () => updateLivePreview(index));
+            });
+        }
+
+        function updateLivePreview(index) {
+            const qEl = document.getElementById(`edit-q-${index}`);
+            const keyEl = document.getElementById(`edit-key-${index}`);
+            const previewQ = document.getElementById(`preview-q-${index}`);
+            const previewKey = document.getElementById(`preview-key-${index}`);
+            const previewBox = document.getElementById(`preview-box-${index}`);
+            if (!qEl || !keyEl || !previewQ || !previewKey) return;
+
+            previewQ.innerHTML = qEl.value || "<span class='text-gray-400'>Belum ada soal.</span>";
+            previewKey.innerHTML = keyEl.value || "<span class='text-gray-400'>Belum ada kunci.</span>";
+            if (previewBox && !previewBox.classList.contains("hidden")) {
+                renderMathJax([previewQ, previewKey]);
+            }
+        }
+
+        function previewMath(index) {
+            const previewBox = document.getElementById(`preview-box-${index}`);
+            if (!previewBox) return;
+
+            previewBox.classList.remove("hidden");
+            updateLivePreview(index);
+
+            const previewQ = document.getElementById(`preview-q-${index}`);
+            const previewKey = document.getElementById(`preview-key-${index}`);
+            renderMathJax([previewQ, previewKey]);
+        }
+
+        function saveCustomQuestions() {
+            quizData.forEach((item, index) => {
+                item.q = document.getElementById(`edit-q-${index}`).value;
+                item.key = document.getElementById(`edit-key-${index}`).value;
+            });
+            localStorage.setItem('matrix_quiz_data', JSON.stringify(quizData));
+            alert("Perubahan seluruh soal berhasil disimpan!");
+            backToMenu();
+        }
+
+        function resetDefaultQuestions() {
+            if (confirm("Yakin ingin mereset seluruh soal ke pengaturan awal/standar? Semua perubahan Anda akan hilang.")) {
+                localStorage.removeItem('matrix_quiz_data');
+                quizData = JSON.parse(JSON.stringify(defaultQuizData));
+                renderEditorList();
+                alert("Soal berhasil dikembalikan ke default!");
+            }
+        }
+    </script>
+</body>
+</html>
